@@ -10,6 +10,8 @@ import com.findarecord.neo4j.QueryServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
@@ -32,13 +34,16 @@ public class App
     BasicConfigurator.configure();
     Logger.getRootLogger().setLevel(Level.INFO);
 
-    System.out.println( "Hello World!" );
-
     graphDb = new GraphDatabaseFactory().newEmbeddedDatabase("/srv/neo4j");
     registerShutdownHook( graphDb );
 
     Server server = new Server(8080);
-    server.setHandler(new QueryServer());
+
+    ServletContextHandler context = new ServletContextHandler(
+        ServletContextHandler.NO_SESSIONS);
+    context.setContextPath("/");
+    context.addServlet(new ServletHolder(new QueryServer(graphDb)),"/");
+    server.setHandler(context);
 
     CouchbaseBehavior couchbaseBehavior = new CouchbaseBehaviorImpl(hostname,port);
     CAPIBehavior capiBehavior = new CouchbaseCAPIBehaviorImpl(16, logger);
