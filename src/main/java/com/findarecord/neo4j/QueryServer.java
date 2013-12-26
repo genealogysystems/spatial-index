@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,20 +63,14 @@ public class QueryServer extends HttpServlet {
       throw new UnsupportedOperationException("POST required");
     }
 
-    InputStream is = req.getInputStream();
+    Map<String, Object> parsedValue = getJSON(req);
 
-    int requestLength = req.getContentLength();
-    byte[] buffer = new byte[requestLength];
-    IOUtils.readFully(is, buffer, 0, requestLength);
-
-    @SuppressWarnings("unchecked")
-    Map<String, Object> parsedValue = (Map<String, Object>) mapper
-        .readValue(buffer, Map.class);
-
-    logger.warn("obj is {}", parsedValue.get("query"));
+    //logger.warn("obj is {}", parsedValue.get("query"));
 
     Map<String, Object> responseMap = new HashMap();
     responseMap.put("ok", false);
+
+    Map<String, Object> resultMap = new HashMap();
 
     ExecutionEngine engine = new ExecutionEngine(graphDb, StringLogger.SYSTEM);
 
@@ -94,8 +89,37 @@ public class QueryServer extends HttpServlet {
 
   protected void handleDistanceQuery(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException{
+
+    Map<String, Object> json = getJSON(req);
+
+    EntryQuery idx = new EntryQuery(graphDb);
+
+
+    ArrayList<String> results = idx.queryDistance(
+        (Double) json.get("lon"),
+        (Double) json.get("lat"),
+        (Double) json.get("radius"),
+        (Integer) json.get("from"),
+        (Integer) json.get("to"),
+        new String[0],
+        (Integer) json.get("count"),
+        (Integer) json.get("offset"));
+    logger.warn("returned {}",results);
+
+    OutputStream os = resp.getOutputStream();
     resp.setStatus(HttpServletResponse.SC_OK);
-    resp.getWriter().println("{\"distance\":true}");
+    mapper.writeValue(os, results);
+  }
+
+  Map<String, Object> getJSON(HttpServletRequest req)
+      throws ServletException, IOException{
+
+    InputStream is = req.getInputStream();
+    int requestLength = req.getContentLength();
+    byte[] buffer = new byte[requestLength];
+    IOUtils.readFully(is, buffer, 0, requestLength);
+
+    return (Map<String, Object>) mapper.readValue(buffer, Map.class);
   }
 
   String[] getUriPieces(String uri) {

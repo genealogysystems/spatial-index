@@ -16,8 +16,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class EntryQuery {
 
+  private static final Logger logger = LoggerFactory.getLogger(QueryServer.class);
   private GraphDatabaseService graphDb;
 
   public EntryQuery(GraphDatabaseService graphDb) {
@@ -40,7 +44,6 @@ public class EntryQuery {
 
   public ArrayList<String> queryDistance(double lon, double lat, double radius, Integer from, Integer to, String[] tags, Integer count, Integer offset) {
     ArrayList<String> entryIDs;
-
 
     //create calculator to get/set the radius correctly
     GeodeticCalculator calc = new GeodeticCalculator();
