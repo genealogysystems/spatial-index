@@ -6,11 +6,14 @@ import com.couchbase.capi.CouchbaseBehavior;
 
 import com.findarecord.couchbase.CouchbaseBehaviorImpl;
 import com.findarecord.couchbase.CouchbaseCAPIBehaviorImpl;
+import com.findarecord.neo4j.QueryServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+
+import org.eclipse.jetty.server.Server;
 
 public class App 
 {
@@ -34,12 +37,17 @@ public class App
     graphDb = new GraphDatabaseFactory().newEmbeddedDatabase("/srv/neo4j");
     registerShutdownHook( graphDb );
 
+    Server server = new Server(8080);
+    server.setHandler(new QueryServer());
+
     CouchbaseBehavior couchbaseBehavior = new CouchbaseBehaviorImpl(hostname,port);
     CAPIBehavior capiBehavior = new CouchbaseCAPIBehaviorImpl(16, logger);
 
     CAPIServer capiServer = new CAPIServer(capiBehavior, couchbaseBehavior, port, username,password);
     try {
       capiServer.start();
+      server.start();
+      server.join();
     } catch (Exception e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
