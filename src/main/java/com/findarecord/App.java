@@ -46,7 +46,7 @@ public class App
     server.setHandler(context);
 
     CouchbaseBehavior couchbaseBehavior = new CouchbaseBehaviorImpl(hostname,port);
-    CAPIBehavior capiBehavior = new CouchbaseCAPIBehaviorImpl(16, logger);
+    CAPIBehavior capiBehavior = new CouchbaseCAPIBehaviorImpl(16, logger, graphDb);
 
     CAPIServer capiServer = new CAPIServer(capiBehavior, couchbaseBehavior, port, username,password);
     try {

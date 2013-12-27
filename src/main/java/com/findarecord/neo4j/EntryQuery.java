@@ -28,7 +28,7 @@ public class EntryQuery {
     this.graphDb = graphDb;
   }
 
-  public ArrayList<String> queryPolygon(String geoString, Integer from, Integer to, String[] tags, Integer count, Integer offset) {
+  public ArrayList<String> queryPolygon(String geoString, Integer from, Integer to, ArrayList<String> tags, Integer count, Integer offset) {
     ArrayList<String> entryIDs = new ArrayList<>();
 
     //get geometry
@@ -42,7 +42,7 @@ public class EntryQuery {
     return entryIDs;
   }
 
-  public ArrayList<String> queryDistance(double lon, double lat, double radius, Integer from, Integer to, String[] tags, Integer count, Integer offset) {
+  public ArrayList<String> queryDistance(double lon, double lat, double radius, Integer from, Integer to, ArrayList<String> tags, Integer count, Integer offset) {
     ArrayList<String> entryIDs;
 
     //create calculator to get/set the radius correctly
@@ -73,7 +73,7 @@ public class EntryQuery {
     return entryIDs;
   }
 
-  private ArrayList<String> queryGeometry(Geometry geometry, Integer from, Integer to, String[] tags, Integer count, Integer offset) {
+  private ArrayList<String> queryGeometry(Geometry geometry, Integer from, Integer to, ArrayList<String> tags, Integer count, Integer offset) {
     ArrayList<String> entryIDs = new ArrayList<>();
 
     //create bounding envelope
@@ -103,7 +103,7 @@ public class EntryQuery {
           .relationships(DynamicRelationshipType.withName(Settings.NEO_BOX_LINK),Direction.INCOMING)
           .relationships(DynamicRelationshipType.withName(Settings.NEO_BOX_INTERSECT),Direction.OUTGOING)
               //only traverse paths in our bounding box
-          .evaluator(getEvaluator(minLon, maxLon, minLat, maxLat, from, to, new HashSet<>(Arrays.asList(tags))))
+          .evaluator(getEvaluator(minLon, maxLon, minLat, maxLat, from, to, new HashSet<>(tags)))
               //only return entries
           .evaluator(Evaluators.includeWhereLastRelationshipTypeIs(DynamicRelationshipType.withName(Settings.NEO_BOX_INTERSECT)));
 

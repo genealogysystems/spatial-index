@@ -101,10 +101,9 @@ public class QueryServer extends HttpServlet {
         (Double) json.get("radius"),
         (Integer) json.get("from"),
         (Integer) json.get("to"),
-        new String[0],
+        (ArrayList<String>) json.get("tags"),
         (Integer) json.get("count"),
         (Integer) json.get("offset"));
-    logger.warn("returned {}",results);
 
     OutputStream os = resp.getOutputStream();
     resp.setStatus(HttpServletResponse.SC_OK);

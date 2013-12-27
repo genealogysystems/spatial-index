@@ -20,17 +20,17 @@ public class EntryIndex {
 
   private Node entryNode;
 
-  private HashSet<String> incrementedNodes;
+  //private HashSet<String> incrementedNodes;
 
   private EntryDelete entryDelete;
 
   public EntryIndex(GraphDatabaseService graphDb) {
     this.graphDb = graphDb;
-    this.incrementedNodes = new HashSet<>();
+    //this.incrementedNodes = new HashSet<>();
     this.entryDelete = new EntryDelete(graphDb);
   }
 
-  public String indexEntry(String entryId, String collectionId, Integer from, Integer to, String[] tags, String geoString) {
+  public String indexEntry(String entryId, String collectionId, Integer from, Integer to, ArrayList<String> tags, String geoString) {
     String ret = "";
     boolean wasNotCreated = false;
 
@@ -52,7 +52,8 @@ public class EntryIndex {
     entryNode.setProperty("collection_id", collectionId);
     entryNode.setProperty("from", from);
     entryNode.setProperty("to", to);
-    entryNode.setProperty("tags", tags);
+    //TODO make sure tags doesn't need a toArray()
+    entryNode.setProperty("tags", tags.toArray(new String[tags.size()]));
     entryNode.addLabel(DynamicLabel.label("Entry"));
 
 
@@ -209,12 +210,14 @@ public class EntryIndex {
     Node fromNode = factory.getOrCreate("id", 0);
 
     //increment count if we haven't seen this node before
+    /*
     if(!incrementedNodes.contains("0")) {
       Integer count = (Integer) fromNode.getProperty("count");
       fromNode.setProperty("count", count+1);
       fromNode.setProperty("lastUpdated", System.currentTimeMillis() / 1000l);
       incrementedNodes.add("0");
     }
+    */
 
     String lastId = null;
     ArrayList<String> ids = box.getIds();
@@ -244,12 +247,14 @@ public class EntryIndex {
       Node toNode = nodeFactory.getOrCreate( "id", idString );
 
       //increment count if we haven't seen this node before
+      /*
       if(!incrementedNodes.contains(idString)) {
         Integer count = (Integer) toNode.getProperty("count");
         toNode.setProperty("count", count+1);
         toNode.setProperty("lastUpdated", System.currentTimeMillis() / 1000l);
         incrementedNodes.add(idString);
       }
+      */
 
       //create relationship
       UniqueFactory.UniqueEntity<Relationship> rel = createRelationship(fromNode, toNode, "id", id, Settings.NEO_BOX_LINK_INDEX, Settings.NEO_BOX_LINK);
