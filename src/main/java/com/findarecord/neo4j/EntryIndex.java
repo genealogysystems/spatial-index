@@ -59,7 +59,7 @@ public class EntryIndex {
 
     //if node already existed, decrement counters and remove old relationships
     if(wasNotCreated) {
-      entryDelete.decrementNodes(entryNode);
+      //entryDelete.decrementNodes(entryNode);
       //remove all old relationships
       for(Relationship rel: entryNode.getRelationships()) {
         rel.delete();
@@ -202,8 +202,8 @@ public class EntryIndex {
       protected void initialize( Node created, Map<String, Object> properties )
       {
         created.setProperty( "id", properties.get( "id" ) );
-        created.setProperty( "count", new Integer(0) );
-        created.setProperty( "lastUpdated", new Long(0) );
+        //created.setProperty( "count", new Integer(0) );
+        //created.setProperty( "lastUpdated", new Long(0) );
 
       }
     };
@@ -228,8 +228,8 @@ public class EntryIndex {
       protected void initialize( Node created, Map<String, Object> properties )
       {
         created.setProperty( "id", properties.get( "id" ) );
-        created.setProperty( "count", new Integer(0) );
-        created.setProperty( "lastUpdated", new Long(0) );
+        //created.setProperty( "count", new Integer(0) );
+        //created.setProperty( "lastUpdated", new Long(0) );
       }
     };
 

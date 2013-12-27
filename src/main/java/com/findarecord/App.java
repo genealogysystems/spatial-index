@@ -34,7 +34,7 @@ public class App
     BasicConfigurator.configure();
     Logger.getRootLogger().setLevel(Level.INFO);
 
-    graphDb = new GraphDatabaseFactory().newEmbeddedDatabase("/srv/neo4j");
+    graphDb = new GraphDatabaseFactory().newEmbeddedDatabase("/mnt/neo4j");
     registerShutdownHook( graphDb );
 
     Server server = new Server(8080);

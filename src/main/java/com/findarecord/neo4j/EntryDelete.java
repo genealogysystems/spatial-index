@@ -27,29 +27,28 @@ public class EntryDelete {
   }
 
   public void deleteEntry(String entryId) {
-    try ( Transaction tx = graphDb.beginTx() ) {
-      UniqueFactory<Node> factory = new UniqueFactory.UniqueNodeFactory( graphDb, Settings.NEO_ENTRY)
+
+    UniqueFactory<Node> factory = new UniqueFactory.UniqueNodeFactory( graphDb, Settings.NEO_ENTRY)
+    {
+      @Override
+      protected void initialize( Node created, Map<String, Object> properties )
       {
-        @Override
-        protected void initialize( Node created, Map<String, Object> properties )
-        {
-          created.setProperty( "id", properties.get( "id" ) );
-        }
-      };
-
-      //get entry node
-      entryNode = factory.getOrCreate("id", entryId);
-
-      //decrement counters
-      decrementNodes(entryNode);
-
-      //remove all old relationships
-      for(Relationship rel: entryNode.getRelationships()) {
-        rel.delete();
+        created.setProperty( "id", properties.get( "id" ) );
       }
-      entryNode.delete();
-      tx.success();
+    };
+
+    //get entry node
+    entryNode = factory.getOrCreate("id", entryId);
+
+    //decrement counters
+    //decrementNodes(entryNode);
+
+    //remove all old relationships
+    for(Relationship rel: entryNode.getRelationships()) {
+      rel.delete();
     }
+    entryNode.delete();
+
   }
 
   public void decrementNodes(Node startNode) {
