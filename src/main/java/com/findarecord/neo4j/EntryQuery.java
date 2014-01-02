@@ -28,7 +28,7 @@ public class EntryQuery {
     this.graphDb = graphDb;
   }
 
-  public ArrayList<String> queryPolygon(String geoString, Integer from, Integer to, ArrayList<String> tags, Integer count, Integer offset) {
+  public ArrayList<String> queryPolygon(String geoString, Integer from, Integer to, ArrayList<String> tags, Integer depth, Integer count, Integer offset) {
     ArrayList<String> entryIDs = new ArrayList<>();
 
     //get geometry
@@ -36,13 +36,13 @@ public class EntryQuery {
 
     //if we have a valid geometry, query it
     if(geometry != null) {
-      entryIDs = queryGeometry(geometry, from, to, tags, count, offset);
+      entryIDs = queryGeometry(geometry, from, to, tags, depth, count, offset);
     }
 
     return entryIDs;
   }
 
-  public ArrayList<String> queryDistance(double lon, double lat, double radius, Integer from, Integer to, ArrayList<String> tags, Integer count, Integer offset) {
+  public ArrayList<String> queryDistance(double lon, double lat, double radius, Integer from, Integer to, ArrayList<String> tags, Integer depth, Integer count, Integer offset) {
     ArrayList<String> entryIDs;
 
     //create calculator to get/set the radius correctly
@@ -64,7 +64,7 @@ public class EntryQuery {
     Polygon circle = new GeometryFactory().createPolygon( ring, null );
 
     //perform query
-    entryIDs = queryGeometry(circle, from, to, tags, count, offset);
+    entryIDs = queryGeometry(circle, from, to, tags, depth, count, offset);
 
     Envelope envelope = circle.getEnvelopeInternal();
 
@@ -73,7 +73,7 @@ public class EntryQuery {
     return entryIDs;
   }
 
-  private ArrayList<String> queryGeometry(Geometry geometry, Integer from, Integer to, ArrayList<String> tags, Integer count, Integer offset) {
+  private ArrayList<String> queryGeometry(Geometry geometry, Integer from, Integer to, ArrayList<String> tags, Integer depth, Integer count, Integer offset) {
     ArrayList<String> entryIDs = new ArrayList<>();
 
     //create bounding envelope
@@ -103,7 +103,7 @@ public class EntryQuery {
           .relationships(DynamicRelationshipType.withName(Settings.NEO_BOX_LINK),Direction.INCOMING)
           .relationships(DynamicRelationshipType.withName(Settings.NEO_BOX_INTERSECT),Direction.OUTGOING)
               //only traverse paths in our bounding box
-          .evaluator(getEvaluator(minLon, maxLon, minLat, maxLat, from, to, new HashSet<>(tags)))
+          .evaluator(getEvaluator(minLon, maxLon, minLat, maxLat, from, to, new HashSet<>(tags), depth))
               //only return entries
           .evaluator(Evaluators.includeWhereLastRelationshipTypeIs(DynamicRelationshipType.withName(Settings.NEO_BOX_INTERSECT)));
 
@@ -221,7 +221,7 @@ public class EntryQuery {
     return nodeSize;
   }
 
-  private Evaluator getEvaluator(final double minLon, final double maxLon, final double minLat, final double maxLat,final int from, final int to, final Set<String> tags) {
+  private Evaluator getEvaluator(final double minLon, final double maxLon, final double minLat, final double maxLat,final int from, final int to, final Set<String> tags, final Integer depth) {
     return new Evaluator() {
       @Override
       public Evaluation evaluate( final Path path )
@@ -232,6 +232,11 @@ public class EntryQuery {
         }
 
         boolean includeAndContinue = true;
+
+        //if we are at maximum depth
+        if(path.length() > depth) {
+          return Evaluation.EXCLUDE_AND_PRUNE;
+        }
 
         //if outside our boundary, exclude and prune, else include and continue
         Relationship rel = path.lastRelationship();

@@ -53,6 +53,11 @@ public class QueryServer extends HttpServlet {
       return;
     }
 
+    if (splitUri[0].equals("shape")) {
+      handleShapeQuery(req, resp);
+      return;
+    }
+
     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
   }
 
@@ -102,6 +107,29 @@ public class QueryServer extends HttpServlet {
         (Integer) json.get("from"),
         (Integer) json.get("to"),
         (ArrayList<String>) json.get("tags"),
+        (Integer) json.get("depth"),
+        (Integer) json.get("count"),
+        (Integer) json.get("offset"));
+
+    OutputStream os = resp.getOutputStream();
+    resp.setStatus(HttpServletResponse.SC_OK);
+    mapper.writeValue(os, results);
+  }
+
+  protected void handleShapeQuery(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException{
+
+    Map<String, Object> json = getJSON(req);
+
+    EntryQuery idx = new EntryQuery(graphDb);
+
+
+    ArrayList<String> results = idx.queryPolygon(
+        (String) json.get("geojson"),
+        (Integer) json.get("from"),
+        (Integer) json.get("to"),
+        (ArrayList<String>) json.get("tags"),
+        (Integer) json.get("depth"),
         (Integer) json.get("count"),
         (Integer) json.get("offset"));
 
