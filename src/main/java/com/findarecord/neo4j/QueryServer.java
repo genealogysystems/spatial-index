@@ -11,8 +11,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.neo4j.cypher.ExecutionEngine;
@@ -97,19 +99,40 @@ public class QueryServer extends HttpServlet {
 
     Map<String, Object> json = getJSON(req);
 
+    HashMap<String,String> mapping = new HashMap<>();
+    mapping.put("lon","double");
+    mapping.put("lat","double");
+    mapping.put("radius","double");
+    mapping.put("from","int");
+    mapping.put("to","int");
+    mapping.put("tags","arraylist");
+    mapping.put("depth","int");
+    mapping.put("count","int");
+    mapping.put("offset","int");
+
+    HashMap<String,Object> params;
+
+    try {
+      params = extractParams(mapping, json);
+    } catch (Exception e) {
+      resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      PrintWriter writer = resp.getWriter();
+      writer.print("{\"error\":\""+e.getMessage()+"\"}");
+      return;
+    }
+
     EntryQuery idx = new EntryQuery(graphDb);
 
-
     ArrayList<String> results = idx.queryDistance(
-        (Double) json.get("lon"),
-        (Double) json.get("lat"),
-        (Double) json.get("radius"),
-        (Integer) json.get("from"),
-        (Integer) json.get("to"),
-        (ArrayList<String>) json.get("tags"),
-        (Integer) json.get("depth"),
-        (Integer) json.get("count"),
-        (Integer) json.get("offset"));
+        (Double) params.get("lon"),
+        (Double) params.get("lat"),
+        (Double) params.get("radius"),
+        (Integer) params.get("from"),
+        (Integer) params.get("to"),
+        (ArrayList<String>) params.get("tags"),
+        (Integer) params.get("depth"),
+        (Integer) params.get("count"),
+        (Integer) params.get("offset"));
 
     OutputStream os = resp.getOutputStream();
     resp.setStatus(HttpServletResponse.SC_OK);
@@ -121,17 +144,36 @@ public class QueryServer extends HttpServlet {
 
     Map<String, Object> json = getJSON(req);
 
+    HashMap<String,String> mapping = new HashMap<>();
+    mapping.put("geojson","string");
+    mapping.put("from","int");
+    mapping.put("to","int");
+    mapping.put("tags","arraylist");
+    mapping.put("depth","int");
+    mapping.put("count","int");
+    mapping.put("offset","int");
+
+    HashMap<String,Object> params;
+
+    try {
+      params = extractParams(mapping, json);
+    } catch (Exception e) {
+      resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      PrintWriter writer = resp.getWriter();
+      writer.print("{\"error\":\""+e.getMessage()+"\"}");
+      return;
+    }
+
     EntryQuery idx = new EntryQuery(graphDb);
 
-
     ArrayList<String> results = idx.queryPolygon(
-        (String) json.get("geojson"),
-        (Integer) json.get("from"),
-        (Integer) json.get("to"),
-        (ArrayList<String>) json.get("tags"),
-        (Integer) json.get("depth"),
-        (Integer) json.get("count"),
-        (Integer) json.get("offset"));
+        (String) params.get("geojson"),
+        (Integer) params.get("from"),
+        (Integer) params.get("to"),
+        (ArrayList<String>) params.get("tags"),
+        (Integer) params.get("depth"),
+        (Integer) params.get("count"),
+        (Integer) params.get("offset"));
 
     OutputStream os = resp.getOutputStream();
     resp.setStatus(HttpServletResponse.SC_OK);
@@ -147,6 +189,56 @@ public class QueryServer extends HttpServlet {
     IOUtils.readFully(is, buffer, 0, requestLength);
 
     return (Map<String, Object>) mapper.readValue(buffer, Map.class);
+  }
+
+  HashMap<String,Object> extractParams(HashMap<String,String> mapping, Map<String, Object> json) throws Exception {
+
+    HashMap<String,Object> params = new HashMap<>();
+    Object temp;
+
+    for (Map.Entry<String, String> entry : mapping.entrySet()) {
+      temp = json.get(entry.getKey());
+
+      if(temp == null) {
+        throw new Exception(entry.getKey() + " must be of type " + entry.getValue());
+      }
+
+      switch (entry.getValue()) {
+        case "double":
+          if(temp.getClass().equals(Double.class)) {
+           params.put(entry.getKey(),temp);
+          } else if(temp.getClass().equals(Integer.class)) {
+           params.put(entry.getKey(),((Integer)temp).doubleValue());
+          } else {
+           throw new Exception(entry.getKey() + " must be of type " + entry.getValue());
+          }
+          break;
+        case "int":
+          if(temp.getClass().equals(Integer.class)) {
+            params.put(entry.getKey(),temp);
+          } else {
+            throw new Exception(entry.getKey() + " must be of type " + entry.getValue());
+          }
+          break;
+        case "string":
+          if(temp.getClass().equals(String.class)) {
+            params.put(entry.getKey(),temp);
+          } else {
+            throw new Exception(entry.getKey() + " must be of type " + entry.getValue());
+          }
+          break;
+        case "arraylist":
+          if(temp.getClass().equals(ArrayList.class)) {
+            params.put(entry.getKey(),temp);
+          } else {
+            throw new Exception(entry.getKey() + " must be of type " + entry.getValue());
+          }
+          break;
+        default:throw new Exception("Unknown type " + entry.getValue());
+      }
+    }
+
+    return params;
   }
 
   String[] getUriPieces(String uri) {
