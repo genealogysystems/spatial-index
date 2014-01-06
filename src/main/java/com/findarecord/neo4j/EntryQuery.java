@@ -130,7 +130,7 @@ public class EntryQuery {
 
           //if we are in range of our query, add to result
           if(i >= offset && i < end) {
-            entryIDs.add((String) entry.getProperty("id"));
+            entryIDs.add(collectionId);
           }
           i++;
         }
